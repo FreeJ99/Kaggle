@@ -21,7 +21,7 @@ import os
 
 import preprocessing as ppcs 
 
-def run():
+def sweep():
     dataset = pd.read_csv("data/train.csv")
     Y = dataset["Survived"]
     X = dataset.drop(["Survived"], axis=1)
@@ -81,13 +81,34 @@ def run():
     dump(search.cv_results_, "models/results2.joblib")
     #dump(search.best_estimator_, "models/best_estimator.joblib")
 
+def test():
+    dataset = pd.read_csv("data/train.csv")
+    Y = dataset["Survived"]
+    X = dataset.drop(["Survived"], axis=1)
+
+    pipe = Pipeline([
+        #('feature_removal', ppcs.get_feature_removal()),
+        #('col_t', ppcs.get_col_transf()),
+        ('model', ensemble.RandomForestClassifier(n_estimators=1000, criterion='entropy', min_samples_split=2))
+    ])
+
+    pipe.fit(X, Y)
+
+    testset = pd.read_csv('data/test.csv')
+    y_pred = pipe.predict(testset)
+    ret = pd.DataFrame([testset['PassengerId'], y_pred]).T
+    ret.columns = ['PassengerId','Survived']
+    return ret
+
+
 if __name__ == "__main__":
     if not sys.warnoptions:
         warnings.simplefilter("ignore")
         os.environ["PYTHONWARNINGS"] = "ignore" # Also affect subprocesses
     
-    wandb.init(project="Titanic")
+    #wandb.init(project="Titanic")
+    #sweep()
 
-
-    run()
+    pred = test()
+    pred.to_csv("data/submit.csv", index=False)
    

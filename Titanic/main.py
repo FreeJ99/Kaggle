@@ -7,17 +7,21 @@ from sklearn import ensemble
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
+import wandb
+
 import pandas as pd
 import numpy as np
 from scipy.stats import loguniform
 from scipy.stats import expon
 
 from joblib import dump, load
+import sys
+import warnings
+import os
 
 import preprocessing as ppcs 
 
-if __name__ == "__main__":
-
+def run():
     dataset = pd.read_csv("data/train.csv")
     Y = dataset["Survived"]
     X = dataset.drop(["Survived"], axis=1)
@@ -68,11 +72,22 @@ if __name__ == "__main__":
         }
     ]
 
-    search = RandomizedSearchCV(pipe, param_dist, n_iter=5000, cv=3, n_jobs=2,
+    search = RandomizedSearchCV(pipe, param_dist, n_iter=100, cv=3, n_jobs=2,
                             verbose=1, random_state=42, return_train_score=True,
                             scoring = 'accuracy')
 
     search.fit(X, Y)
 
-    dump(search.cv_results_, "models/results.joblib")
+    dump(search.cv_results_, "models/results2.joblib")
     #dump(search.best_estimator_, "models/best_estimator.joblib")
+
+if __name__ == "__main__":
+    if not sys.warnoptions:
+        warnings.simplefilter("ignore")
+        os.environ["PYTHONWARNINGS"] = "ignore" # Also affect subprocesses
+    
+    wandb.init(project="Titanic")
+
+
+    run()
+   
